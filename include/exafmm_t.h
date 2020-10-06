@@ -12,6 +12,7 @@
 #include "align.h"
 #include "args.h"
 #include "vec.h"
+#include "mpi_utils.h"
 
 namespace exafmm_t {
   const int MEM_ALIGN = 64;
@@ -23,6 +24,7 @@ namespace exafmm_t {
   const real_t EPS = 1e-8f;
   typedef fftwf_complex fft_complex;
   typedef fftwf_plan fft_plan;
+  MPI_Datatype MPI_REAL_T = MPI_FLOAT;        //!< Floating point MPI type
 #define fft_plan_dft fftwf_plan_dft
 #define fft_plan_many_dft fftwf_plan_many_dft
 #define fft_execute_dft fftwf_execute_dft
@@ -38,6 +40,7 @@ namespace exafmm_t {
   const real_t EPS = 1e-16;
   typedef fftw_complex fft_complex;
   typedef fftw_plan fft_plan;
+  MPI_Datatype MPI_REAL_T = MPI_DOUBLE;        //!< Floating point MPI type
 #define fft_plan_dft fftw_plan_dft
 #define fft_plan_many_dft fftw_plan_many_dft
 #define fft_execute_dft fftw_execute_dft
@@ -91,8 +94,18 @@ namespace exafmm_t {
     T q;                                   //!< Charge
     T p;                                   //!< Potential
     vec<3,T> F;                            //!< Gradient
+    uint64_t key;                          //!< Hilbert key
   };
   template <typename T> using Bodies = std::vector<Body<T>>;     //!< Vector of nodes
+
+  // Base struct for nodes, used for MPI communications
+  struct NodeBase {
+    vec3 x;               //!< Coordinates of the center of the node
+    real_t r;             //!< Radius of the node
+    uint64_t key;         //!< Hilbert key
+    bool is_leaf;         //!< Whether the node is leaf
+    int nsrcs;            //!< Number of sources
+  };
 
   /**
    * @brief Structure of nodes.
@@ -100,15 +113,10 @@ namespace exafmm_t {
    * @tparam Value type of sources and targets (real or complex).
    */
   template <typename T>
-  struct Node {
+  struct Node : public NodeBase {
     size_t idx;                                 //!< Index in the octree
     size_t idx_M2L;                             //!< Index in global M2L interaction list
-    bool is_leaf;                               //!< Whether the node is leaf
     int ntrgs;                                  //!< Number of targets
-    int nsrcs;                                  //!< Number of sources
-    vec3 x;                                     //!< Coordinates of the center of the node
-    real_t r;                                   //!< Radius of the node
-    uint64_t key;                               //!< Morton key
     int level;                                  //!< Level in the octree
     int octant;                                 //!< Octant
     Node* parent;                               //!< Pointer to parent
