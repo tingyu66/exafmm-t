@@ -100,7 +100,8 @@ namespace exafmm_t {
       src_index[b] = b;
       localHist[src_key[b]]++;
     }
-    // Sort sources according to keys    std::vector<int> src_key2 = src_key;
+    // Sort sources according to keys
+    std::vector<int> src_key2 = src_key;
     radixsort(src_key, src_index, nsrcs);  // sort index based on key
     Bodies<T> src_buffer = sources;
     for (int b=0; b<nsrcs; b++) {
