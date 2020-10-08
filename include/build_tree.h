@@ -83,6 +83,7 @@ namespace exafmm_t {
                   Node<T>* node, Nodes<T>& nodes, NodePtrs<T>& leafs, NodePtrs<T>& nonleafs,
                   const Keys& leafkeys, FmmBase<T>& fmm, bool direction=false) {
     //! Create a tree node
+    node->first_src = (direction ? sources_buffer : sources) + source_begin;
     node->idx = int(node-&nodes[0]);  // current node's index in nodes
     node->nsrcs = source_end - source_begin;
     node->ntrgs = target_end - target_begin;
@@ -195,6 +196,12 @@ namespace exafmm_t {
                &targets[0], &targets_buffer[0], 0, targets.size(),
                &nodes[0], nodes, leafs, nonleafs,
                leafkeys, fmm);
+
+    // copy node.key to body.key
+    for (auto& leaf : leafs) {
+      for (int b=0; b<leaf->nsrcs; b++)
+        leaf->first_src[b].key = leaf->key;
+    }
     return nodes;
   }
 
