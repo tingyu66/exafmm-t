@@ -1,6 +1,7 @@
 #include "build_tree.h"
 #include "dataset.h"
 #include "exafmm_t.h"
+#include "local_essential_tree.h"
 #include "partition.h"
 #include "test.h"
 #include "timer.h"
@@ -44,6 +45,16 @@ int main(int argc, char** argv) {
   fmm.M2M(root);
   assert(nsrcs == root->up_equiv[0]);
   if (MPIRANK == 0) std::cout << "assertion passed!" << std::endl;
+
+  if (MPIRANK == 0)
+  {
+    for (auto i : offset) std::cout << i << " ";
+    std::cout << std::endl;
+  }
+
+  // build LET
+  localEssentialTree(sources, targets, nodes, leafs, nonleafs,
+                     fmm, offset);
 
   stopMPI();
 }
