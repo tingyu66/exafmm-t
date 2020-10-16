@@ -121,6 +121,32 @@ namespace exafmm_t {
     if (MPIRANK == 0) std::cout << "number of sources received" << std::endl;
     for (int i=0; i<MPISIZE; i++)
       printMPI(recvBodyCount[i]);
+
+    // create bodyMap and nodeMap
+    BodyMap<T> bodyMap;
+    NodeMap<T> nodeMap;
+    // insert bodies to bodyMap
+    for (size_t i=0; i<recvBodies.size(); i++) {
+      bodyMap.insert(std::pair<uint64_t, Body<T>>(recvBodies[i].key, recvBodies[i]));
+    }
+    // insert nodes (NodeBase) to nodeMap
+    for (size_t i=0; i<recvCells.size(); i++) {
+      uint64_t key = recvCells[i].key;    // key with level offset
+      if (nodeMap.find(key) == nodeMap.end()) {
+        nodeMap[key] = recvCells[i];
+      } else {
+        for (int n=0; n<nsurf; n++) {
+          nodeMap[key].up_equiv[n] += recvCells[i].up_equiv[n];
+        }
+        nodeMap[key].nsrcs += recvCells[i].nsrcs;
+      }
+    }
+
+    if (MPIRANK == 0) std::cout << "number of sources in LET root" << std::endl;
+    printMPI(nodeMap[0].nsrcs);
+    if (MPIRANK == 0) std::cout << "monopole of LET root" << std::endl;
+    printMPI(nodeMap[0].up_equiv[0]);
+
   }
 }
 #endif
