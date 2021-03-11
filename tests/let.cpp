@@ -24,6 +24,7 @@ int main(int argc, char** argv) {
   partition(sources, targets, x0, r0, offset, args.maxlevel);
 
   // print partition information
+  if (MPIRANK == 0) print_divider("partition info");
   int nsrcs = sources.size();
   int ntrgs = targets.size();
   if (MPIRANK == 0) std::cout << "number of sources: " << std::endl;
@@ -44,10 +45,10 @@ int main(int argc, char** argv) {
   fmm.P2M(leafs);
   fmm.M2M(root);
   assert(nsrcs == root->up_equiv[0]);
-  if (MPIRANK == 0) std::cout << "assertion passed!" << std::endl;
+  if (MPIRANK == 0) std::cout << "monopole check passed!" << std::endl;
 
-  if (MPIRANK == 0)
-  {
+  if (MPIRANK == 0) {
+    std::cout << "Hilbert key offset for each rank" << std::endl;
     for (auto i : offset) std::cout << i << " ";
     std::cout << std::endl;
   }
